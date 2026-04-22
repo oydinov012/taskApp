@@ -1,11 +1,10 @@
-from rest_framework.routers import DefaultRouter
-from api.views.user_app import UserModeViewSet
+from api.views.user_app import RegisterUserApiView, LoginView, ProfileApiView ,ChangePhotoProfileView
 from django.urls import path, include
 
-r = DefaultRouter()
-
-r.register(r'users', UserModeViewSet, basename='users')
-
-urlpatterns = [
-    path('', include(r.urls)),
+urlpatterns=[
+    path('login/',LoginView.as_view()),
+    path('register/',RegisterUserApiView.as_view()),
+    path('profile/',ProfileApiView.as_view()),
+    path('photo/',ChangePhotoProfileView.as_view())
 ]
+
