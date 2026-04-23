@@ -7,7 +7,7 @@ from apps.utils.utility import validate_uz_phone, normalize_uz_phone
 
 
 class UserSeralizer(serializers.ModelSerializer):
-
+    id = serializers.UUIDField(read_only=True)
     class Meta:
         model = User
         fields = '__all__'
@@ -20,9 +20,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'username', 
-            'email', 
-            'phobe_number',
-            'photo',
+            # 'email', 
+            # 'phone_number',
             'password'
             ]
 
@@ -37,7 +36,7 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-class ProfileSerializer(serializers.Serializer):
+class ProfileUpdateSerializer(serializers.Serializer):
 
     first_name = serializers.CharField(write_only=True,required=True)
     last_name = serializers.CharField(write_only=True,required=True)
@@ -117,4 +116,21 @@ class ChangePhotoProfileSerializer(serializers.Serializer):
         return instance
 
 
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name',
+            'username',
+            'phone',
+            "password",
+            'photo'
+        ]
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
     

@@ -1,10 +1,14 @@
 from rest_framework.views import APIView
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from apps.users.models import User
 from rest_framework import status
 from django.contrib.auth import authenticate
-from api.serializer.user_app import RegisterSerializer, LoginSerializer, ProfileSerializer, ChangePhotoProfileSerializer
+from api.serializer.user_app import RegisterSerializer, LoginSerializer, ProfileUpdateSerializer, \
+    ChangePhotoProfileSerializer, ProfileSerializer, LogoutSerializer
 
 class RegisterUserApiView(APIView):
     def post(self, request):
@@ -39,16 +43,16 @@ class LoginView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class ProfileApiView(UpdateAPIView):
+class ProfileUpdateApiView(UpdateAPIView):
     http_method_names = ['put', 'patch']
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileUpdateSerializer
     permission_classes = [IsAuthenticated, ]
 
     def get_object(self):
         return self.request.user
     
     def update(self, request, *args, **kwargs):
-        super(ProfileApiView,self).update(request, *args, **kwargs)
+        super(ProfileUpdateApiView,self).update(request, *args, **kwargs)
     
         data = {
             "succes":True,
@@ -88,3 +92,40 @@ class ChangePhotoProfileView(APIView):
             ser.errors,
             status.HTTP_400_BAD_REQUEST
         )
+
+
+
+class ProfileApiView(RetrieveAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def get_object(self):
+        return self.request.user
+    
+
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = LogoutSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        refresh_token = serializer.validated_data.get("refresh")
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({
+                "success": True,
+                "message": "Siz logoutni muvaffaqiyatli amalga oshirdingiz!"
+            }, status=status.HTTP_205_RESET_CONTENT)
+
+        except TokenError:
+            return Response({
+                "success": False,
+                "message": "Token noto‘g‘ri yoki eskirgan"
+            }, status=status.HTTP_400_BAD_REQUEST)
