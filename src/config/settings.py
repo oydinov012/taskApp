@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -107,6 +108,10 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Agar sizda boshqa sozlamalar bo'lsa, ularni ostidan qo'shing
+}
 
 
 SIMPLE_JWT = {
@@ -153,6 +158,14 @@ SIMPLE_JWT = {
     "CHECK_REVOKE_TOKEN": False,
     "REVOKE_TOKEN_CLAIM": "hash_password",
     "CHECK_USER_IS_ACTIVE": True,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Task Management API',
+    'DESCRIPTION': 'Vazifalar va ularning tarixi bilan ishlash uchun API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Bu yerda logotip yoki boshqa ma'lumotlarni ham sozlash mumkin
 }
 
 # Internationalization
