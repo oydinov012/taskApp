@@ -105,13 +105,20 @@ class ProfileUpdateSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-
-        
 class ChangePhotoProfileSerializer(serializers.Serializer):
-    photo = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=["jpeg","jpg","heic","heif","png"])])
-
+    photo = serializers.ImageField(
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["jpeg", "jpg", "heic", "heif", "png"]
+            )
+        ]
+    )
     def update(self, instance, validated_data):
-        instance.photo = validated_data.get('photo',instance.photo)
+        """
+        `instance` bu foydalanuvchi (User) obyekti.
+        `validated_data` ichida faqat `photo` maydoni bo‘ladi.
+        """
+        instance.photo = validated_data.get("photo", instance.photo)
         instance.save()
         return instance
 
