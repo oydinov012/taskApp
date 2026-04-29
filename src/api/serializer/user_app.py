@@ -1,110 +1,128 @@
-
 from rest_framework import serializers
-from apps.users.models import User
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from django.contrib.auth import authenticate
 from django.core.validators import FileExtensionValidator
+
+from apps.users.models import User
 from apps.utils.utility import validate_uz_phone, normalize_uz_phone
 
 
-class UserSeralizer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+# =========================
+# USER OUTPUT
+# =========================
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'phone',
+            'photo'
+        ]
 
 
+# =========================
+# REGISTER
+# =========================
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = [
-            'username', 
-            # 'email', 
-            # 'phone_number',
-            'password'
-            ]
-
+        fields = ['username', 'password']
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        return User.objects.create_user(**validated_data)
 
+
+# =========================
+# LOGIN (JWT READY)
+# =========================
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
+    def validate(self, attrs):
+        user = authenticate(
+            username=attrs.get("username"),
+            password=attrs.get("password")
+        )
+
+        if not user:
+            raise AuthenticationFailed("Username yoki parol noto‘g‘ri")
+
+        attrs["user"] = user
+        return attrs
 
 
+# =========================
+# PROFILE UPDATE
+# =========================
 class ProfileUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
+    phone = serializers.CharField(required=False)
+    password = serializers.CharField(required=False, write_only=True)
+    confirm_password = serializers.CharField(required=False, write_only=True)
 
-    first_name = serializers.CharField(write_only=True,required=True)
-    last_name = serializers.CharField(write_only=True,required=True)
-    username = serializers.CharField(write_only=True,required=True)
-    phone = serializers.CharField(write_only=True,required=True)
-    password = serializers.CharField(write_only=True,required=True)
-    confirm_password = serializers.CharField(write_only=True,required=True)
+    def validate(self, attrs):
+        password = attrs.get("password")
+        confirm_password = attrs.get("confirm_password")
 
+        if password or confirm_password:
+            if not password or not confirm_password:
+                raise ValidationError("Ikkala parol ham kiritilishi shart")
 
-    def validate(self,attr):
-        username = attr.get('username',None)
-        password = attr.get('password',None)
-        confirm_password = attr.get('confirm_password', None)
-        first_name = attr.get('first_name', None)
-        last_name = attr.get('last_name', None)
+            if password != confirm_password:
+                raise ValidationError("Parollar mos emas")
 
-        if not username:
-            raise ValidationError(
-                "usename mavjud emas"
-            )
-        
-        
-        if not password:
-            raise ValidationError(
-                {
-                    "message":"parol kiritilishi majburiy"
-                }
-            )
-        if not confirm_password:
-            raise ValidationError(
-                {
-                    "message":" tasdiqlash parolini ham kiriting !! "
-                }
-            )
-            
+        first_name = attrs.get("first_name")
+        last_name = attrs.get("last_name")
 
-        if password != confirm_password:
-            raise ValidationError(
-                {
-                                    "message":"dastlabki va tasdiqlash kodlari bir xil bo'lishi mumkin emas"
+        if first_name and last_name and first_name == last_name:
+            raise ValidationError("Ism va familiya bir xil bo‘lmasin")
 
-                }
-            )
-        
-        if first_name == last_name:
-            raise ValidationError(
-                {
-                    "message":"ism va familiya bir xil!!"
-                }
-            )
-        
-        return attr
+        return attrs
+
     def validate_phone(self, value):
         value = normalize_uz_phone(value)
         validate_uz_phone(value)
         return value
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data.get('first_name',instance.first_name) 
-        instance.last_name = validated_data.get('last_name',instance.last_name)
-        instance.password = validated_data.get('password',instance.password)
-        instance.username = validated_data.get('username',instance.username) 
-        instance.photo = validated_data.get('photo',instance.photo)
-        instance.phone = validated_data.get('phone',instance.phone)
+        for field in ["first_name", "last_name", "username", "phone"]:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+
+        password = validated_data.get("password")
+        if password:
+            instance.set_password(password)
 
         instance.save()
         return instance
 
+
+# =========================
+# PROFILE GET
+# =========================
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name',
+            'username',
+            'phone',
+            'photo'
+        ]
+
+
+# =========================
+# PHOTO UPDATE
+# =========================
 class ChangePhotoProfileSerializer(serializers.Serializer):
     photo = serializers.ImageField(
         validators=[
@@ -113,31 +131,15 @@ class ChangePhotoProfileSerializer(serializers.Serializer):
             )
         ]
     )
+
     def update(self, instance, validated_data):
-        """
-        `instance` bu foydalanuvchi (User) obyekti.
-        `validated_data` ichida faqat `photo` maydoni bo‘ladi.
-        """
         instance.photo = validated_data.get("photo", instance.photo)
         instance.save()
         return instance
 
 
-
-class ProfileSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = [
-            'first_name',
-            'last_name',
-            'username',
-            'phone',
-            "password",
-            'photo'
-        ]
-
-
+# =========================
+# LOGOUT
+# =========================
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
-    

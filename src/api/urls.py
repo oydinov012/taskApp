@@ -1,7 +1,6 @@
 from api.views.user_app import RegisterUserApiView, LoginView, ProfileUpdateApiView ,\
     ChangePhotoProfileView, ProfileApiView, LogoutView
-from api.views.task_view import TaskCreateView, TaskListView,\
-                        TaskRetrivelUpdateDeleteView, TaskHistoryListView
+from api.views.task_view import TaskDetailView, TaskHistoryListView, TaskListCreateView
 from django.urls import path, include
 
 urlpatterns=[
@@ -12,9 +11,7 @@ urlpatterns=[
     path('photo/',ChangePhotoProfileView.as_view()),
     path('logout/',LogoutView.as_view()),
     path('history/',TaskHistoryListView.as_view()),
-    path('task-create/',TaskCreateView.as_view()),
-    path('',TaskListView.as_view()),
-    path('tasks/<int:id>/', TaskRetrivelUpdateDeleteView.as_view(), name='task-detail'),
-
+    path('tasks/',TaskListCreateView.as_view()),
+    path('tasks/<uuid:id>/', TaskDetailView.as_view()),
 ]
 
