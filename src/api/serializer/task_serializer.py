@@ -23,7 +23,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
-            # "deadline",
+            "deadline",
             "is_completed"
         ]
 
