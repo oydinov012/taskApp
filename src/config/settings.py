@@ -53,11 +53,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React/Next.js default porti
-    "http://127.0.0.1:3000",
-]
+
+
+# CORS_ALLOWED_ORIGINS = [
+#     "https://asd123411.netlify.app",
+#     "http://localhost:3000", # Agar frontendni lokal muhitda ham ishlatsangiz
+#     "http://127.0.0.1:3000",
+# ]
 
 ROOT_URLCONF = 'config.urls'
 
@@ -168,6 +172,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     # Bu yerda logotip yoki boshqa ma'lumotlarni ham sozlash mumkin
 }
+
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://asd123411.netlify.app",
+# ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
